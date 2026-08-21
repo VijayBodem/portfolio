@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <title>Vijay Bodem — Full-Stack Engineer</title>
+    <meta
+      name="description"
+      content="Full-stack engineer specialising in real-time and video infrastructure. WebRTC, Socket.IO, React and Node.js — including a Government of India telemedicine platform. Hyderabad, India."
+    />
+    <meta name="author" content="Vijay Bodem" />
+
+    <!-- Keywords recruiters search for, present as real crawlable text. -->
+    <meta
+      name="keywords"
+      content="Vijay Bodem, Full Stack Developer, React Developer, Node.js Developer, WebRTC, Socket.IO, TypeScript, MongoDB, Hyderabad"
+    />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Vijay Bodem — Full-Stack Engineer" />
+    <meta
+      property="og:description"
+      content="Real-time and video infrastructure: WebRTC, Socket.IO, React and Node.js. Production platforms including a national telemedicine service."
+    />
+    <!-- TODO: add public/og-image.png at 1200x630 and set the absolute URL below. -->
+    <meta property="og:image" content="/og-image.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Browser chrome should follow the theme, not always show the dark value. -->
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0b" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fbfbfc" />
+
+    <!--
+      Applied before first paint so a light-mode visitor never sees a dark flash.
+      Must stay in sync with the storage key in src/lib/useTheme.ts.
+    -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('vb-theme')
+          var light =
+            stored === 'light' ||
+            (!stored && window.matchMedia('(prefers-color-scheme: light)').matches)
+          if (light) document.documentElement.setAttribute('data-theme', 'light')
+        } catch (e) {
+          /* private mode — fall through to the dark default */
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
