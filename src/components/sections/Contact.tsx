@@ -36,6 +36,7 @@ export function Contact() {
       href: profile.links.resume,
       Icon: FileText,
       primary: false,
+      download: true,
     },
   ]
 
@@ -74,10 +75,11 @@ export function Contact() {
 
         <Reveal delay={0.08} className="mt-10">
           <ul className="grid gap-3 sm:grid-cols-2">
-            {channels.map(({ label, value, href, Icon, primary }) => (
+            {channels.map(({ label, value, href, Icon, primary, download }) => (
               <li key={label}>
                 <a
                   href={href}
+                  download={download}
                   target={href.startsWith('mailto:') || href.startsWith('/') ? undefined : '_blank'}
                   rel="noreferrer noopener"
                   className={`group flex items-center gap-4 rounded-card border p-5

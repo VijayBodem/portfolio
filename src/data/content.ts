@@ -8,11 +8,11 @@
 export const profile = {
   name: 'Vijay Bodem',
   role: 'Full-Stack Engineer',
-  specialism: 'Real-Time & Video Infrastructure',
+  specialism: 'Real-Time Systems & Frontend Architecture',
   location: 'Hyderabad, India',
   yearsExperience: '2.6+',
   tagline:
-    'I build systems where latency, state synchronisation and connection reliability actually matter — real-time video, live collaboration, and the APIs underneath them.',
+    'I build production frontends and the real-time systems behind them — WebRTC video and live collaboration where reliability is the constraint, and Figma-to-production interfaces where the architecture has to be migrated or built from nothing.',
   availability: 'Open to full-stack and frontend roles — remote or Hyderabad.',
   email: 'vijaybodem17@gmail.com',
   links: {
@@ -24,8 +24,8 @@ export const profile = {
 
 /** Scannable credibility, directly under the hero. Keep to four. */
 export const proofPoints = [
-  { value: '2.6+', label: 'Years shipping production software' },
-  { value: '5', label: 'Production platforms contributed to' },
+  { value: '2.7+', label: 'Years shipping production software' },
+  { value: '6', label: 'Platforms built or contributed to' },
   { value: 'WebRTC', label: 'Peer-to-peer video, in production' },
   { value: 'National', label: 'Government healthcare deployment' },
 ] as const
@@ -74,26 +74,27 @@ export const projects: Project[] = [
   {
     slug: 'e-sanjeevani',
     title: 'E-Sanjeevani',
-    subtitle: 'National Telemedicine Platform',
+    subtitle: 'Video Consultation SDK for National Telemedicine',
     tier: 'flagship',
     kind: 'company',
     access: 'proprietary',
-    org: 'InstaVC — Government of India health programme',
+    org: 'InstaVC — SDK for a Government of India health programme',
     period: 'Apr 2024 – Dec 2025',
     hook:
-      'Video consultations for a Government of India health platform, where the patient may be on a weak rural mobile connection and the call simply cannot fail.',
+      'A video consultation SDK embedded inside a Government of India telemedicine service — shipped as a component another team integrates, where the patient may be on a weak rural connection and the call simply cannot fail.',
     context:
-      'E-Sanjeevani is India’s national telemedicine service, connecting patients at primary health centres with doctors remotely. I worked on the client application that carries the consultation itself — the live video session between doctor and patient.',
+      'E-Sanjeevani is India’s national telemedicine service, connecting patients at primary health centres with doctors remotely. We did not build their application — we built the SDK that carries the consultation inside it. The client integrates it into their own platform, which means the video session, its recording and its failure modes are ours, while the surrounding application is theirs.',
     problem:
-      'A consumer video app can drop a call and apologise. A health consultation cannot. The hard constraints were network variability across rural and urban India, browsers and devices we did not control, and a doctor–patient pair who often did not share a common language.',
+      'A consumer video app can drop a call and apologise. A health consultation cannot. On top of that, shipping an SDK removes the usual escape routes: you cannot patch the host application, you cannot assume how it will be embedded, and every change has to stay backwards compatible for a team that integrates on their own schedule. The hard constraints were network variability across rural and urban India, browsers and devices we did not control, a doctor–patient pair who often did not share a common language, and a requirement to produce a complete audio record of a consultation that might run for an hour.',
     architecture:
-      'The client establishes a peer-to-peer WebRTC session, so consultation media never transits our servers — lower latency and a smaller privacy surface for health data. A Socket.IO signalling channel handles offer/answer exchange, ICE candidate trickling and session lifecycle. Live translation runs alongside the media stream, so speech is captioned and translated without adding latency to the video path itself.',
+      'The SDK establishes a peer-to-peer WebRTC session, so consultation media never transits our servers — lower latency and a smaller privacy surface for health data. A Socket.IO signalling channel handles offer/answer exchange, ICE candidate trickling and session lifecycle. Live translation runs alongside the media stream, so speech is captioned and translated without adding latency to the video path itself. Recording runs as a separate concern: audio is captured in five-minute segments and written to IndexedDB as the consultation proceeds, so nothing large is held in memory and nothing is lost if the tab dies. When the doctor ends the meeting, the SDK reads every stored segment back, merges them into a single consultation recording and uploads it to AWS S3.',
     contributions: [
       'Built secure peer-to-peer video consultation using WebRTC with Socket.IO signalling, keeping patient media off application servers entirely.',
+      'Designed and built the consultation audio recording pipeline: five-minute segments captured during the call and persisted to IndexedDB, then merged into one complete recording and uploaded to AWS S3 when the meeting ends.',
       'Implemented live language translation during consultations, so doctor and patient could communicate across a language barrier in real time.',
       'Hardened session handling against real-world network conditions — reconnection, ICE renegotiation and graceful degradation on connection loss.',
-      'Used IndexedDB for client-side session state, so a browser refresh or transient drop did not lose consultation context.',
-      'TODO: add the scale figure you know — consultations supported, concurrent sessions, or number of health centres live.',
+      'Shipped the work as an SDK the client integrates into their own application, holding the integration surface stable across releases.',
+      'Supported the client in production after delivery — diagnosing call issues they hit in the field and building features against their requirements as they came up.',
     ],
     decisions: [
       {
@@ -111,14 +112,39 @@ export const projects: Project[] = [
         rationale:
           'Keeping translation off the critical media path meant a slow or failed translation degraded a feature rather than dropping the consultation. The video call remains the thing that must never break.',
       },
+      {
+        choice:
+          'Record in five-minute segments to IndexedDB, instead of buffering the whole consultation in memory',
+        rationale:
+          'A consultation can run for an hour, and holding that much audio in one in-memory buffer is exactly the wrong thing to do on the low-end devices these calls run on. It also means a crash or a stray refresh loses the entire record — of a medical consultation. Writing bounded segments to IndexedDB as the call proceeds keeps memory flat regardless of how long the call runs, and caps the worst case at the segment in flight rather than the whole consultation.',
+      },
+      {
+        choice: 'Merge and upload only after the call ends, never during it',
+        rationale:
+          'Uploading segments mid-consultation would put the recording in direct competition with the video for the patient’s bandwidth — and on a weak rural connection that is not a trade worth making. Deferring the merge and the S3 upload until the doctor ends the meeting keeps the entire recording feature off the call’s critical path: while the consultation is live, recording only ever writes locally.',
+      },
     ],
     outcome:
-      'Secure peer-to-peer consultations with live translation, running as part of a national public-health service. TODO: add scale or reliability figure.',
-    stack: ['JavaScript', 'WebRTC', 'Socket.IO', 'Node.js', 'IndexedDB', 'HTML', 'CSS'],
+      'Delivered as an SDK the client integrates into their own platform, and in active production use on a national public-health service. The relationship continued past delivery — when the client hit call issues in the field or needed new capability, that work came to me.',
+    stack: [
+      'JavaScript',
+      'WebRTC',
+      'Socket.IO',
+      'Node.js',
+      'IndexedDB',
+      'AWS S3',
+      'HTML',
+      'CSS',
+    ],
     diagram: {
-      nodes: ['Doctor client', 'Signalling server', 'Patient client'],
+      nodes: [
+        'Live call audio',
+        '5-min segments → IndexedDB',
+        'Merge on meeting end',
+        'Upload to AWS S3',
+      ],
       caption:
-        'Signalling brokers the handshake; media flows peer-to-peer and never touches the server.',
+        'While the call is live, recording only ever writes locally. The merge and upload happen after it ends, so recording never competes with the consultation for bandwidth.',
     },
   },
   {
@@ -143,7 +169,7 @@ export const projects: Project[] = [
       'Integrated Razorpay to gate meeting and webinar creation behind licence purchase, connecting the payment result to entitlement checks in the product.',
       'Developed user-facing meeting modules in React and Redux, managing complex media and participant state.',
       'Improved application stability and performance across the meeting experience.',
-      'TODO: add concrete numbers — max participants per session, active users, or a specific stability or performance improvement you measured.',
+      'The platform runs in production with paying customers, and the meeting and webinar features built here continue to serve them.',
     ],
     decisions: [
       {
@@ -163,7 +189,7 @@ export const projects: Project[] = [
       },
     ],
     outcome:
-      'Shipped meeting, webinar and licensing features on a commercial product with a working revenue path. TODO: add usage or scale figure.',
+      'Shipped meeting, webinar and licensing features on a commercial product with a working revenue path. The platform is live with paying customers and those features remain in service — the meeting and webinar capability was later carried across into InLynk.',
     stack: [
       'React.js',
       'Redux',
@@ -182,49 +208,62 @@ export const projects: Project[] = [
     },
   },
   {
-    slug: 'sparta',
-    title: 'Sparta',
-    subtitle: 'Enterprise Field-Operations Platform',
+    slug: 'rentokil-sparta',
+    title: 'Rentokil Sparta',
+    subtitle: 'Service Planning & Technician Route Allocation',
     tier: 'flagship',
     kind: 'company',
     access: 'proprietary',
-    org: 'Kellton Tech — enterprise client engagement',
+    org: 'Kellton Tech — client engagement for Rentokil',
     period: 'Feb 2026 – Present',
     hook:
-      'A greenfield enterprise platform, built from scratch out of user stories and Figma screens — where the frontend architecture is a decision rather than an inheritance.',
+      'A multi-module field-service platform, built from the ground up out of business requirements and Figma designs — where the frontend architecture is a decision rather than an inheritance.',
     context:
-      'Sparta is an enterprise field-operations platform I am currently building for a client engagement at Kellton Tech. Unlike work on an existing codebase, this started from nothing: requirements arrive as user stories, the interface arrives as Figma screens, and the frontend architecture underneath both is set as we go.',
+      'Sparta — Service Planning Automation with Route Technician Allocation — is the platform Rentokil uses to plan service work and allocate technicians to routes. I am building its frontend on a client engagement at Kellton Tech. Unlike work on an existing codebase, this started from nothing: requirements arrive as business specifications and user stories, the interface arrives as Figma designs, and the frontend architecture underneath both is set as we go.',
     problem:
       'Greenfield work removes the safety net of precedent. There is no existing pattern to follow, so every structural choice — component boundaries, state ownership, how design tokens map to code, how a screen is composed — is made rather than inherited, and made early enough that changing it later is expensive. Alongside that, user stories are rarely complete on first reading, so part of the work is finding the gaps in a requirement before building the wrong thing.',
     architecture:
-      'A React and TypeScript frontend built as a composable component layer beneath the Figma design system, so screens are assembled from shared primitives rather than rebuilt each time. TODO: describe the real state-management approach, routing structure, and how you consume the backend APIs — this section is the one engineers read most closely.',
+      'A React and TypeScript frontend organised around a shared foundation rather than a set of screens. Common components are built from the Figma system on top of MUI and reused across modules, with theming handled through tokens so light and dark are both first-class from the start rather than one being retrofitted onto the other. The folder structure mirrors the module boundaries, and each module keeps its API calls in its own dedicated file — so the data access for a feature sits next to that feature instead of accumulating in one shared client that every module has to reason about.',
     contributions: [
-      'Building the frontend of an enterprise field-operations platform from scratch in React and TypeScript, establishing the component architecture rather than inheriting one.',
-      'Translating Figma designs into a reusable component layer, keeping implementation faithful to the design system while staying composable across screens.',
-      'Working from user stories to implementation — clarifying requirements with stakeholders and surfacing implementation gaps before they reached delivery.',
-      'Collaborating with backend teams to align API contracts as the platform and its services were designed in parallel.',
+      'Building a multi-module enterprise web application from the ground up in React and TypeScript, establishing the component architecture rather than inheriting one.',
+      'Building reusable, maintainable frontend components on MUI, keeping implementation faithful to the design system while staying composable across modules.',
+      'Translating Figma designs into responsive, production-ready interfaces, holding visual consistency across every module.',
+      'Collaborating with backend teams to integrate APIs and support end-to-end feature delivery as platform and services were designed in parallel.',
+      'Built the shared component library and the common structural conventions the modules are assembled from, working from the Figma designs and user stories.',
+      'Implemented full light and dark theme support across the component layer, designed in from the start rather than bolted on afterwards.',
+      'Established the folder structure and the convention of a dedicated API file per module, so each feature owns its own data access instead of sharing one growing client.',
+      'Participating in technical discussions and requirement clarification to identify implementation gaps early.',
       'Recognised by team members and solution architects for delivery quality.',
-      'TODO: name one specific thing you built here — a component system, a complex screen, a tricky interaction, a performance problem you solved.',
     ],
     decisions: [
       {
-        choice: 'TODO: the structural call you made early — how you organised components and state',
+        choice: 'Build the shared component layer first, before building any module',
         rationale:
-          'TODO: what the alternative was and why you rejected it. On a greenfield build this is your strongest available signal, because the decisions were genuinely yours to make. Even "co-located state per feature rather than one global store, because X" is worth stating.',
+          'The faster-feeling start is to build screens as the stories arrive and extract shared pieces later. On a multi-module product that reliably produces four slightly different versions of the same table before anyone notices. Establishing the common components and structural conventions up front meant each new module was assembly rather than invention — and it is far cheaper to agree a pattern once than to reconcile four of them after they all have callers.',
       },
       {
-        choice: 'TODO: how you mapped the Figma design system into code',
+        choice: 'Design light and dark as two first-class themes from the start',
         rationale:
-          'TODO: did you build primitives first, or extract them as patterns repeated? How do design tokens reach the components? Interviewers ask this constantly and most candidates have no answer.',
+          'Theming is one of those things that is nearly free at the beginning and expensive forever afterwards. Retrofitting a second theme onto components with colours hard-coded through them means touching every component again, and it is where contrast bugs get in. Driving both themes through tokens from the first component meant dark mode was never a migration.',
+      },
+      {
+        choice: 'One API file per module, rather than a single shared API client',
+        rationale:
+          'A shared client starts tidy and becomes the file nobody wants to open — every module’s endpoints in one place, with no boundary explaining which feature owns what. Keeping each module’s calls beside that module means the data access is discoverable from the feature, changes stay contained, and two modules touching similar endpoints cannot silently couple through a shared helper.',
       },
     ],
     outcome:
-      'In active development. TODO: add what has shipped so far — modules live, screens delivered, or the size of the surface you own.',
-    stack: ['React.js', 'TypeScript', 'Tailwind CSS', 'Figma'],
+      'In active development, with the shared component layer, theming and module conventions in place and the modules being built on top of them. Recognised by team members and solution architects for delivery quality.',
+    stack: ['React.js', 'TypeScript', 'MUI', 'Figma', 'REST APIs'],
     diagram: {
-      nodes: ['Figma design system', 'React component layer', 'Feature screens', 'Client APIs'],
+      nodes: [
+        'Figma designs + stories',
+        'Themed component layer',
+        'Feature modules',
+        'Per-module API files',
+      ],
       caption:
-        'Designs resolve into shared primitives first, so screens compose rather than duplicate. TODO: confirm this matches how the project is actually structured.',
+        'Designs resolve into shared, themed primitives first, so modules assemble rather than duplicate — and each module owns its own data access.',
     },
   },
   {
@@ -280,7 +319,7 @@ export const projects: Project[] = [
       },
     ],
     outcome:
-      'A working platform with real-time collaboration and production-shaped authentication, built solo. Not yet deployed publicly — TODO: once it is live, add the demo and repo links and rewrite this line around what a visitor can go and try.',
+      'A working platform with real-time collaboration and production-shaped authentication, designed and built end to end on my own. Currently running locally; a public deployment is in progress.',
     stack: [
       'React 19',
       'TypeScript',
@@ -309,6 +348,69 @@ export const projects: Project[] = [
     },
   },
   {
+    slug: 'abhibus-migration',
+    title: 'AbhiBus',
+    subtitle: 'Frontend Architecture Migration',
+    tier: 'secondary',
+    kind: 'company',
+    access: 'proprietary',
+    org: 'Kellton Tech — client engagement for ixigo / AbhiBus',
+    period: 'Feb 2026 – May 2026',
+    hook:
+      'Sole frontend developer on a full frontend architecture migration for AbhiBus, one of India’s largest bus-booking platforms — delivered with no outage and no post-migration defects, while the data contracts underneath were still changing.',
+    context:
+      'AbhiBus, part of the ixigo group, needed its frontend architecture migrated, with specific performance improvements expected out of it. I was the only frontend developer on the workstream, owning it end to end from Feb 2026 through to completion on 5 May 2026, working directly with the client team and with the backend engineers whose contracts were changing at the same time.',
+    problem:
+      'Two things had to be true at once. The application was slow — screens waited on large, monolithic API responses before they could render — and the migration was expected to fix that. But the thing being replaced was already live and carrying real customers, and the data flow itself was changing, so the backend contracts were moving while the frontend was being migrated against them. As the only frontend developer on the workstream there was no second pair of eyes: a wrong assumption about a response shape would surface as a production incident rather than a review comment.',
+    architecture:
+      'The work ran as a sequence rather than a rewrite. First I mapped the live application’s response structures and data flow, so the existing contracts were documented before anything changed. The client walked me through the migration requirements directly — what was changing and which performance improvements were expected. I then went through the affected modules at code level, module by module, to find where the new data flow would actually break the old assumptions. Only after that did I take the required contract and data-flow changes back to the backend team, so their changes and my migration landed together instead of colliding. The largest of those changes was breaking the single slow API response into several focused endpoints; the frontend then composes those responses and maps them into per-screen view models, so a screen no longer blocks on one oversized request. The migrated frontend is React and TypeScript against the client’s internal design system (ABRS-UI) with Tailwind CSS.',
+    contributions: [
+      'Owned the frontend architecture migration end to end as the sole frontend developer on the engagement.',
+      'Mapped the live application’s response structures and data flow before changing anything, so the existing contracts were understood rather than assumed.',
+      'Took migration requirements directly from the client in working sessions — scope of the change and the expected performance improvements — and translated them into frontend work.',
+      'Walked the affected modules at code level to locate exactly where the new data flow broke existing assumptions, rather than discovering it at runtime.',
+      'Drove the required contract and data-flow changes with the backend team, so their API changes and the migration shipped in step instead of blocking each other.',
+      'Rebuilt the data layer around the split endpoints: the single slow response was broken into several focused APIs, and I composed them on the client and mapped the results into the shape each screen needed — removing the long wait on one oversized request.',
+      'Delivered the migration on 5 May 2026 with no production outage and no post-migration defects raised — recognised by the client team on completion.',
+    ],
+    decisions: [
+      {
+        choice: 'Map the live system’s data flow first, before writing any migration code',
+        rationale:
+          'The fastest-looking start would have been to begin converting screens immediately. On a live application that is how you find contract mismatches in production instead of in a document. Auditing the existing response structures and data flow up front cost time at the beginning and removed almost all of the risk from everything after it — which is the trade that made a no-outage delivery possible.',
+      },
+      {
+        choice: 'Read the affected modules at code level rather than working from the requirements alone',
+        rationale:
+          'Requirements describe intent; they do not tell you which assumptions the existing code has baked in. Going through each migration module line by line was what surfaced the places the new data flow would silently break behaviour. Those are exactly the defects that reach production, because nothing in the spec predicts them.',
+      },
+      {
+        choice: 'Change the backend contracts with the backend team, instead of adapting around them on the client',
+        rationale:
+          'I could have absorbed the shape differences in the frontend with mapping layers, which is faster in the moment and needs nobody else. It also makes the client permanently responsible for reconciling a contract nobody agreed to, and hides the drift from the team that owns the data. Taking the required data-flow changes back to the backend team kept one agreed contract and meant both sides shipped together.',
+      },
+      {
+        choice: 'Compose the split endpoints deliberately, rather than fetching them one after another',
+        rationale:
+          'Splitting one slow response into several focused endpoints does not make an application faster by itself — it moves the composition problem to the frontend. Requested naively, each call waiting on the one before it, the screen ends up slower than the single request it replaced: more round trips, none of the waiting removed. Fetching them together and mapping the responses into per-screen view models is what converts the split into an actual improvement instead of a redistribution of the same latency. Note this is composition of contracts the backend team and I agreed on — not the client-side compensation for a wrong contract that the previous decision rejects.',
+      },
+    ],
+    outcome:
+      'Delivered on 5 May 2026 with no production outage and no post-migration defects raised, and recognised by the client team on completion. The data layer moved from screens blocking on one large, slow API response to composing several focused endpoints, which removed the load delay the client had asked us to fix.',
+    stack: ['React.js', 'TypeScript', 'Tailwind CSS', 'REST APIs'],
+    diagram: {
+      nodes: [
+        'Audit live data flow',
+        'Client requirements session',
+        'Module-level code walkthrough',
+        'Align contracts with backend',
+        'Migrate',
+      ],
+      caption:
+        'Understanding came first and migration last. Front-loading the audit is what kept a live application from breaking while its data contracts changed underneath it.',
+    },
+  },
+  {
     slug: 'inlynk',
     title: 'InLynk',
     subtitle: 'Collaborative Networking Platform',
@@ -318,26 +420,33 @@ export const projects: Project[] = [
     org: 'InstaVC',
     period: 'Dec 2024 – Oct 2025',
     hook:
-      'A collaborative networking product where I worked across feature development, performance and reliability.',
+      'Carried InMeet’s meeting and webinar capability across into a different product — reshaping it for a new domain, and owning the backend APIs and data structures behind it as well as the frontend.',
     context:
-      'InLynk is InstaVC’s collaborative networking platform. I contributed to feature development alongside performance optimisation and defect resolution.',
+      'InLynk is InstaVC’s collaborative networking platform. Having built the meeting and webinar features in InMeet, I brought that capability into InLynk and adapted it to this product’s domain — working across the stack, on the backend APIs and data structures as well as the interface.',
     problem:
-      'TODO: what was actually hard here? A slow screen you profiled and fixed, a recurring bug class you eliminated, a feature with awkward real-time requirements. One concrete story turns this from a filler card into a real one.',
+      'A capability built for one product rarely fits cleanly into another. InMeet’s meetings and webinars were shaped around a conferencing product; InLynk is a networking platform, so the same features had to answer different questions about who a session belongs to and how it relates to the surrounding domain. Copying the implementation across would have carried InMeet’s assumptions with it; rebuilding from scratch would have thrown away working, proven real-time code.',
     architecture:
-      'React with Redux on the frontend, TypeScript throughout, Node.js and MongoDB services, Firebase for auth, and Socket.IO for real-time updates.',
+      'React with Redux and TypeScript on the frontend, Node.js and MongoDB services behind it, Firebase for auth, and Socket.IO carrying real-time session updates. The meeting and webinar capability was reworked against InLynk’s own domain model rather than transplanted, with the backend API surface and data structures reshaped to match how sessions relate to the networking platform.',
     contributions: [
-      'Delivered features on a production collaborative platform in React, Redux and TypeScript.',
-      'Optimised application performance and resolved defects to improve reliability for users.',
-      'TODO: replace both lines above with one specific thing you built or fixed, and the effect it had.',
+      'Brought InMeet’s meeting and webinar capability into InLynk, adapting it to the platform’s own domain rather than porting the implementation as-is.',
+      'Worked across the stack on this feature set — owning the backend APIs and data structures alongside the React and Redux frontend.',
+      'Maintained the meeting and webinar features in production, resolving defects and improving reliability for users.',
+      'Optimised application performance across the areas I owned.',
     ],
     decisions: [
       {
-        choice: 'TODO: one technical decision you made or argued for here',
+        choice: 'Rework the capability against InLynk’s domain, rather than copying the InMeet implementation across',
         rationale:
-          'TODO: what the alternative was, and why you rejected it. Even a small call is worth stating — it is the difference between "contributed" and "engineered".',
+          'Copying working code is the cheap move, and it silently imports the assumptions of the product it was written for. InMeet models a session the way a conferencing tool needs to; InLynk needed sessions to relate to its own networking domain. Reshaping the data structures and API surface to match this product meant the feature belonged here — instead of becoming a foreign object that every later change has to work around.',
+      },
+      {
+        choice: 'Own the backend data structures rather than adapting to them on the frontend',
+        rationale:
+          'Having built the original features, I understood what the real-time layer actually needed from the data. Taking the backend APIs and structures on directly meant the contract could be shaped correctly for the domain in one pass, instead of a frontend bending around a data model that was never designed for this product’s questions.',
       },
     ],
-    outcome: 'TODO: what improved as a result of your work.',
+    outcome:
+      'Meeting and webinar capability running inside InLynk, adapted to its domain and maintained in production — with the underlying APIs and data structures shaped for this product rather than inherited from the one it came from.',
     stack: [
       'React.js',
       'Redux',
@@ -348,8 +457,9 @@ export const projects: Project[] = [
       'Socket.IO',
     ],
     diagram: {
-      nodes: ['React client', 'Node API', 'MongoDB'],
-      caption: 'TODO: confirm the real shape of this system before publishing.',
+      nodes: ['InMeet session capability', 'Reshaped for InLynk domain', 'Node APIs + MongoDB'],
+      caption:
+        'The capability was reworked against this product’s domain model, not transplanted — so the data structures answer InLynk’s questions rather than InMeet’s.',
     },
   },
 ]
@@ -371,14 +481,14 @@ export const experience: Role[] = [
     period: 'Feb 2026 – Present',
     location: 'Hyderabad, India',
     summary:
-      'Frontend engineering on enterprise client platforms, working directly with client teams and solution architects.',
+      'Frontend engineering across two client engagements — the AbhiBus migration delivered, and Rentokil Sparta being built from the ground up — working directly with client teams and solution architects.',
     highlights: [
-      'Currently building Sparta, an enterprise field-operations platform, from scratch in React and TypeScript — working from user stories and Figma designs, and establishing the frontend component architecture rather than inheriting one. Recognised by team members and solution architects for delivery quality.',
-      'Was the sole frontend developer on a full frontend architecture migration for a leading travel-tech platform, owning the workstream end to end alongside evolving backend APIs. Delivered and recognised by the client team on completion.',
+      'Currently building Rentokil Sparta (Service Planning Automation with Route Technician Allocation), a multi-module field-service platform, from the ground up in React, TypeScript and MUI — translating business requirements and Figma designs into responsive, production-ready interfaces. Recognised by team members and solution architects for delivery quality.',
+      'Was the sole frontend developer on the AbhiBus (ixigo) frontend architecture migration, owning it end to end alongside evolving backend APIs. Completed on 5 May 2026 and recognised by the client team on delivery.',
       'Aligned API contracts directly with backend teams and surfaced implementation gaps before they reached delivery.',
-      'Built and maintained reusable UI components against a design system, keeping the interface responsive and consistent as the codebase grew.',
+      'Built reusable, maintainable UI components against client design systems, holding consistency across modules as each codebase grew.',
     ],
-    relatedProjects: ['sparta'],
+    relatedProjects: ['rentokil-sparta', 'abhibus-migration'],
   },
   {
     company: 'InstaVC',
@@ -429,26 +539,44 @@ export const skills: SkillTier[] = [
     groups: [
       {
         label: 'Frontend',
-        items: ['React.js', 'TypeScript', 'JavaScript (ES6+)', 'React Hooks', 'Tailwind CSS'],
+        items: [
+          'React.js',
+          'TypeScript',
+          'JavaScript (ES6+)',
+          'React Hooks',
+          'Tailwind CSS',
+          'MUI',
+        ],
       },
-      { label: 'State', items: ['Redux', 'RTK Query', 'Context API'] },
-      { label: 'Backend', items: ['Node.js', 'Express.js', 'REST API design', 'JWT auth'] },
+      {
+        label: 'State',
+        items: ['Redux', 'Redux Toolkit (RTK)', 'RTK Query', 'Context API'],
+      },
+      {
+        label: 'Backend',
+        items: ['Node.js', 'Express.js', 'REST API design', 'API integration', 'JWT auth'],
+      },
       { label: 'Real-time', items: ['WebRTC', 'Socket.IO', 'Server-Sent Events'] },
       { label: 'Data', items: ['MongoDB', 'Mongoose'] },
+      { label: 'Markup', items: ['HTML5', 'CSS3'] },
     ],
   },
   {
     tier: 'Working knowledge',
     note: 'Shipped with these; comfortable being asked about them.',
     groups: [
-      { label: 'Frontend', items: ['Next.js', 'ShadCN', 'MUI', 'Zustand', 'React Query'] },
+      { label: 'Frontend', items: ['Next.js', 'ShadCN', 'Bootstrap', 'Zustand', 'React Query'] },
       { label: 'Validation', items: ['Zod'] },
       {
         label: 'Platform',
-        items: ['Firebase (Auth, Firestore, Hosting)', 'Docker', 'Git', 'CI/CD'],
+        items: ['Firebase (Auth, Firestore, Hosting)', 'Docker', 'Git', 'GitHub', 'CI/CD'],
       },
       { label: 'Testing', items: ['Jest'] },
       { label: 'Data', items: ['SQL', 'Redis'] },
+      {
+        label: 'AI-assisted development',
+        items: ['GitHub Copilot', 'Claude Code', 'Cursor', 'Windsurf'],
+      },
     ],
   },
   {

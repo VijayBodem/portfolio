@@ -24,9 +24,13 @@
       property="og:description"
       content="Real-time and video infrastructure: WebRTC, Socket.IO, React and Node.js. Production platforms including a national telemedicine service."
     />
-    <!-- TODO: add public/og-image.png at 1200x630 and set the absolute URL below. -->
-    <meta property="og:image" content="/og-image.png" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <!--
+      No og:image is declared on purpose: a broken image URL previews worse than
+      none at all. To add one, drop a 1200x630 PNG at public/og-image.png, point
+      an og:image meta at its absolute URL, and switch the card to
+      summary_large_image.
+    -->
+    <meta name="twitter:card" content="summary" />
 
     <!-- Browser chrome should follow the theme, not always show the dark value. -->
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a0b" />

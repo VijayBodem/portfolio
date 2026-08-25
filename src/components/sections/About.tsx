@@ -1,6 +1,42 @@
-import { about, education } from '@/data/content'
+import { useState } from 'react'
+import { about, education, profile } from '@/data/content'
 import { Section } from '@/components/ui/Section'
 import { Reveal } from '@/components/ui/Reveal'
+
+/**
+ * Uses public/vijay.jpg when it is there and falls back to a monogram when it is
+ * not — so the section looks deliberate either way, rather than showing a hole
+ * where a photo should be. Drop the file in and it appears; no code change.
+ */
+function Portrait() {
+  const [hasPhoto, setHasPhoto] = useState(true)
+  const initials = profile.name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+
+  return (
+    <div
+      className="mb-8 aspect-[4/5] w-full max-w-[15rem] overflow-hidden rounded-card
+                 border bg-surface"
+    >
+      {hasPhoto ? (
+        <img
+          src="/vijay.jpg"
+          alt={`${profile.name}, ${profile.role}`}
+          onError={() => setHasPhoto(false)}
+          className="size-full object-cover"
+        />
+      ) : (
+        <div className="grid h-full place-items-center" aria-hidden>
+          <span className="font-mono text-5xl font-semibold tracking-tight text-dim">
+            {initials}
+          </span>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function About() {
   return (
@@ -21,21 +57,7 @@ export function About() {
         </Reveal>
 
         <Reveal delay={0.08}>
-          {/* TODO: drop a photo at public/vijay.jpg and swap the placeholder in. */}
-          <div
-            className="mb-8 aspect-[4/5] w-full max-w-[15rem] overflow-hidden rounded-card
-                       border bg-surface"
-          >
-            <div className="grid h-full place-items-center px-6 text-center">
-              <p className="mono-label leading-relaxed">
-                TODO
-                <br />
-                add photo
-                <br />
-                public/vijay.jpg
-              </p>
-            </div>
-          </div>
+          <Portrait />
 
           <dl className="space-y-4">
             {about.facts.map((fact) => (

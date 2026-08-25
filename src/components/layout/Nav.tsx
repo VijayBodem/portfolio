@@ -86,6 +86,7 @@ export function Nav() {
           <div className="flex items-center gap-2">
             <a
               href={profile.links.resume}
+              download
               className="hidden items-center gap-2 rounded-lg border border-border px-3 py-2
                          text-sm font-medium text-text transition-colors duration-150
                          hover:border-accent/40 hover:bg-accent-soft hover:text-accent sm:inline-flex"
@@ -129,6 +130,7 @@ export function Nav() {
             <li>
               <a
                 href={profile.links.resume}
+                download
                 onClick={() => setMenuOpen(false)}
                 className="mt-4 inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-3
                            font-medium text-accent-contrast"

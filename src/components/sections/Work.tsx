@@ -14,7 +14,7 @@ export function Work() {
       id="work"
       index="01"
       title="Selected work"
-      lede="Five platforms — four built inside companies, including a national health service and an enterprise build started from scratch, and one built entirely on my own. Each case study covers the hard part and the decisions behind it."
+      lede="Six platforms — five built inside companies, including a national health service, a delivered architecture migration and an enterprise build started from nothing, plus one built entirely on my own. Each case study covers the hard part and the decisions behind it."
     >
       <RevealGroup className="grid gap-5" stagger={0.08}>
         {flagship.map((project) => (

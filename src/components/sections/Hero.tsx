@@ -81,6 +81,7 @@ export function Hero() {
             </a>
             <a
               href={profile.links.resume}
+              download
               className="inline-flex items-center gap-2 rounded-lg border border-border px-5 py-3
                          text-sm font-semibold text-text transition-colors duration-150
                          hover:border-border-strong hover:bg-surface-hover"
