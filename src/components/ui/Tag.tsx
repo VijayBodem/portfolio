@@ -26,7 +26,7 @@ export function Tag({ children, variant = 'default', className }: TagProps) {
 }
 
 /** The stack items worth pulling the eye toward. */
-const SIGNATURE = new Set(['WebRTC', 'Socket.IO', 'React 19', 'TypeScript', 'Node.js'])
+const SIGNATURE = new Set(['WebRTC', 'Socket.IO', 'React.js','React','React 19', 'TypeScript', 'Node.js', 'JavaScript'])
 
 export function StackTags({ items, className }: { items: readonly string[]; className?: string }) {
   return (

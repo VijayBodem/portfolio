@@ -18,14 +18,14 @@ export const profile = {
   links: {
     github: 'https://github.com/VijayBodem',
     linkedin: 'https://linkedin.com/in/vijay-bodem-040935248',
-    resume: '/Vijay-Bodem-Resume.pdf',
+    resume: '/VijayBodem_FullStackDeveloper.pdf',
   },
 } as const
 
 /** Scannable credibility, directly under the hero. Keep to four. */
 export const proofPoints = [
   { value: '2.8+', label: 'Years shipping production software' },
-  { value: '6', label: 'Platforms built or contributed to' },
+  { value: '7', label: 'Platforms built or contributed to' },
   { value: 'WebRTC', label: 'Peer-to-peer video, in production' },
   { value: 'National', label: 'Government healthcare deployment' },
 ] as const
@@ -270,7 +270,7 @@ export const projects: Project[] = [
     slug: 'collabflow',
     title: 'CollabFlow',
     subtitle: 'Real-Time Project Management Platform',
-    tier: 'flagship',
+    tier: 'secondary',
     kind: 'personal',
     access: 'pending',
     org: 'Personal project — designed, built and deployed solo',
@@ -351,7 +351,7 @@ export const projects: Project[] = [
     slug: 'abhibus-migration',
     title: 'AbhiBus',
     subtitle: 'Frontend Architecture Migration',
-    tier: 'secondary',
+    tier: 'flagship',
     kind: 'company',
     access: 'proprietary',
     org: 'Kellton Tech — client engagement for ixigo / AbhiBus',
@@ -408,6 +408,85 @@ export const projects: Project[] = [
       ],
       caption:
         'Understanding came first and migration last. Front-loading the audit is what kept a live application from breaking while its data contracts changed underneath it.',
+    },
+  },
+  {
+    slug: 'seatlock',
+    title: 'SeatLock',
+    subtitle: 'Reliable Movie & Theatre Seat-Booking Platform',
+    tier: 'secondary',
+    kind: 'personal',
+    access: 'pending',
+    org: 'Personal project — designed, built and deployed solo',
+    period: '2026',
+    hook:
+      'A full-stack movie seat-booking platform built to solve real concurrency problems: temporary holds, transactional consistency, Stripe webhooks, and event-driven communication via Kafka.',
+    context:
+      'SeatLock was built as a practical exploration of the engineering challenges behind reliable, concurrent booking systems. Basic CRUD apps fail when multiple users try to reserve the same seat simultaneously, temporary holds need guaranteed expiration, and payment events must reliably transition booking states.',
+    problem:
+      'Preventing conflicting seat reservations while keeping the user experience responsive and fast. The backend had to coordinate seat availability, timed hold expiration, booking creation, and payment processing under high concurrency, while keeping multiple connected clients synchronized and handling transient failures in infrastructure like Kafka.',
+    architecture:
+      'A React and TypeScript frontend communicates with a NestJS backend API. Persistent state lives in PostgreSQL via Prisma. Redis acts as the real-time adapter for Socket.IO to broadcast live seat availability changes across clients. Apache Kafka handles asynchronous domain events using an outbox pattern for reliability, and Stripe handles secure payment processing with webhook-driven completion.',
+    contributions: [
+      'Designed a concurrency-safe temporary seat-holding mechanism, separating holds from final booking confirmation to give users time to complete payments without locking seats indefinitely.',
+      'Built real-time seat synchronization using Socket.IO backed by Redis, keeping all connected clients instantly updated when seat states change.',
+      'Integrated Stripe payments and robust webhook handling to connect payment completion events securely to final booking confirmation.',
+      'Implemented event-driven architecture using Apache Kafka and an outbox pattern, adding retry handling for when infrastructure is temporarily unavailable.',
+      'Established containerized development using Docker and Docker Compose for PostgreSQL, Redis, Kafka, API, and web services, plus automated CI pipelines via GitHub Actions.',
+      'Added internationalization (English, Hindi, Telugu) supporting multi-language customer and administrative interfaces.',
+    ],
+    decisions: [
+      {
+        choice: 'Temporary holds instead of immediate confirmed bookings',
+        rationale:
+          'Separating holding a seat from confirming it mirrors real-world booking flows and gives users a dedicated checkout window without permanently locking out inventory on abandoned carts.',
+      },
+      {
+        choice: 'PostgreSQL as the transactional source of truth',
+        rationale:
+          'ACID compliance is mandatory for financial transactions and seat reservations. Prisma over PostgreSQL ensures strict relational and transactional consistency.',
+      },
+      {
+        choice: 'Kafka + Outbox pattern for domain events',
+        rationale:
+          'Publishing events directly during DB transactions risks silent failures if Kafka is down. The outbox pattern decouples database writes from event dispatch, preventing lost events during infrastructure blips.',
+      },
+      {
+        choice: 'Stripe webhooks for payment verification over client-side callbacks',
+        rationale:
+          'Relying solely on a frontend redirect after payment is insecure and prone to drop-offs if a user closes the tab. Server-to-server webhooks provide the guaranteed source of truth for payment success.',
+      },
+      {
+        choice: 'Docker Compose for local infrastructure orchestration',
+        rationale:
+          'Managing local installations of PostgreSQL, Redis, and Kafka individually introduces configuration drift. Containerizing the entire stack mirrors production and standardizes development onboarding.',
+      },
+    ],
+    outcome:
+      'A robust, fully containerized booking system that demonstrates advanced backend reliability patterns, concurrency handling, and real-time state synchronization. Currently running locally with CI/CD configured.',
+    stack: [
+      'React',
+      'TypeScript',
+      'NestJS',
+      'PostgreSQL',
+      'Prisma',
+      'Redis',
+      'Socket.IO',
+      'Apache Kafka',
+      'Stripe',
+      'Docker',
+      'Docker Compose',
+      'GitHub Actions',
+    ],
+    diagram: {
+      nodes: [
+        'React Web App',
+        'NestJS API',
+        'PostgreSQL / Redis / Kafka',
+        'Stripe Payments',
+      ],
+      caption:
+        'NestJS coordinates transactional state via PostgreSQL, live UI sync via Redis/Socket.IO, and reliable async events via Kafka.',
     },
   },
   {
@@ -541,41 +620,58 @@ export const skills: SkillTier[] = [
         label: 'Frontend',
         items: [
           'React.js',
-          'TypeScript',
-          'JavaScript (ES6+)',
           'React Hooks',
+          'JavaScript (ES6+)',
+          'TypeScript',
           'Tailwind CSS',
-          'MUI',
+          'Material UI (MUI)',
         ],
       },
       {
-        label: 'State',
-        items: ['Redux', 'Redux Toolkit (RTK)', 'RTK Query', 'Context API'],
+        label: 'State & Data Fetching',
+        items: ['Redux', 'Redux Toolkit (RTK)', 'RTK Query', 'Context API', 'React Query', 'Zustand'],
       },
       {
         label: 'Backend',
-        items: ['Node.js', 'Express.js', 'REST API design', 'API integration', 'JWT auth'],
+        items: ['Node.js', 'Express.js', 'Nest.JS', 'RESTful APIs', 'JWT Authentication', 'Role-Based Access Control (RBAC)', 'Webhooks'],
       },
-      { label: 'Real-time', items: ['WebRTC', 'Socket.IO', 'Server-Sent Events'] },
-      { label: 'Data', items: ['MongoDB', 'Mongoose'] },
-      { label: 'Markup', items: ['HTML5', 'CSS3'] },
+      {
+        label: 'Real-Time & Event-Driven',
+        items: ['Socket.IO', 'WebRTC', 'Server-Sent Events (SSE)', 'Redis-Based Event Synchronization', 'Kafka'],
+      },
+      {
+        label: 'Databases & ORM',
+        items: ['PostgreSQL', 'Prisma', 'MongoDB', 'Mongoose', 'SQL', 'Redis'],
+      },
+      {
+        label: 'Architecture & Design',
+        items: [
+          'System Design Fundamentals',
+          'API Design',
+          'Relational Data Modeling',
+          'Database Transactions',
+          'Concurrency Handling',
+          'Event-Driven Architecture',
+          'Caching Strategies',
+          'Scalability Concepts',
+        ],
+      },
     ],
   },
   {
     tier: 'Working knowledge',
     note: 'Shipped with these; comfortable being asked about them.',
     groups: [
-      { label: 'Frontend', items: ['Next.js', 'ShadCN', 'Bootstrap', 'Zustand', 'React Query'] },
-      { label: 'Validation', items: ['Zod'] },
+      { label: 'Frontend Frameworks & UI', items: ['Next.js', 'ShadCN', 'Bootstrap', 'HTML5', 'CSS3'] },
+      { label: 'API, Payments & Validation', items: ['GraphQL', 'Zod', 'Stripe', 'Payment Intents', 'Refund Workflows'] },
       {
-        label: 'Platform',
-        items: ['Firebase (Auth, Firestore, Hosting)', 'Docker', 'Git', 'GitHub', 'CI/CD'],
+        label: 'Platform & DevOps',
+        items: ['Firebase (Auth, Firestore, Hosting)', 'Docker', 'Docker Compose', 'CI/CD', 'Git', 'GitHub'],
       },
       { label: 'Testing', items: ['Jest'] },
-      { label: 'Data', items: ['SQL', 'Redis'] },
       {
-        label: 'AI-assisted development',
-        items: ['GitHub Copilot', 'Claude Code', 'Cursor', 'Windsurf'],
+        label: 'AI-Assisted Development',
+        items: ['GitHub Copilot', 'Claude Code', 'Cursor AI', 'Windsurf AI'],
       },
     ],
   },
@@ -583,8 +679,7 @@ export const skills: SkillTier[] = [
     tier: 'Familiar',
     note: 'Used or studied, not yet at depth — and I would rather say so.',
     groups: [
-      { label: 'Infrastructure', items: ['AWS (EC2, S3, IAM)'] },
-      { label: 'Data & APIs', items: ['Kafka', 'GraphQL'] },
+      { label: 'Cloud Infrastructure', items: ['AWS (EC2, S3, IAM Foundational)'] },
     ],
   },
 ]

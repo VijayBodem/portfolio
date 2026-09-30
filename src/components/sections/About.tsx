@@ -22,7 +22,7 @@ function Portrait() {
     >
       {hasPhoto ? (
         <img
-          src="/vijay.jpg"
+          src="/VijayBodem-Profile.jpg"
           alt={`${profile.name}, ${profile.role}`}
           onError={() => setHasPhoto(false)}
           className="size-full object-cover"
