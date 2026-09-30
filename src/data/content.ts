@@ -24,7 +24,7 @@ export const profile = {
 
 /** Scannable credibility, directly under the hero. Keep to four. */
 export const proofPoints = [
-  { value: '2.7+', label: 'Years shipping production software' },
+  { value: '2.8+', label: 'Years shipping production software' },
   { value: '6', label: 'Platforms built or contributed to' },
   { value: 'WebRTC', label: 'Peer-to-peer video, in production' },
   { value: 'National', label: 'Government healthcare deployment' },
